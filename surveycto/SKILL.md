@@ -208,6 +208,6 @@ convention not covered above, ask the user:
 
 "I noticed [X] — should I add this to the SurveyCTO skills file?"
 
-If yes, propose a specific addition and offer to edit `.claude/skills/SurveyCTO.md` directly.
+If yes, propose a specific addition and offer to edit `.claude/skills/surveycto/SKILL.md` directly.
 
 Before adding, check if the learning point is already covered or implied by an existing entry. Prefer refining existing entries over adding new ones.

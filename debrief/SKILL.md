@@ -1,3 +1,8 @@
+---
+name: debrief
+description: Runs a full post-meeting workflow from Granola transcript to formatted minutes, GitHub issues, git commit, and Slack post. Use after meetings to process notes and create action items.
+---
+
 # /debrief — Meeting Debrief Skill
 
 Runs a full post-meeting workflow: fetch transcript → draft minutes → create GitHub
