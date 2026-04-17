@@ -1,0 +1,28 @@
+#   Minimal .gitignore for Overleaf-hosted repositories
+#   Excludes local LaTeX/BibTeX build artefacts and a few cross-platform
+#   nuisances. Overleaf compiles LaTeX server-side, so these files should
+#   never be pushed back to the Overleaf remote.
+
+#   macOS
+.DS_Store
+.DS_Store?
+
+#   TeX / LaTeX / BibTeX build artefacts
+*.aux
+*.log
+*.bbl
+*.blg
+*.nav
+*.out
+*.gz
+*.snm
+*.toc
+*.bak
+*synctex*
+*.fdb_latexmk
+*.fls
+*.xdv
+
+#   VSCode
+.vscode/*
+*.code-workspace

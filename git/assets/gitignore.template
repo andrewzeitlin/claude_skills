@@ -1,0 +1,50 @@
+#   macOS
+.DS_Store
+.DS_Store?
+
+#   R / RStudio
+*.Rproj
+.Rdata
+.Rhistory
+.Rproj.user
+~/.boxr-oauth
+
+#   Quarto / Rmd render artefacts
+*_files/
+
+#   TeX / LaTeX
+*.aux
+*.log
+*.bbl
+*.blg
+*.nav
+*.out
+*.gz
+*.snm
+*.toc
+*.bak
+*synctex*
+*.fdb_latexmk
+*.fls
+*.xdv
+
+#   Make
+*Rplots*
+
+#   VSCode
+.vscode/*
+*.code-workspace
+.radian_profile
+
+#   Sublime
+*.sublime-project
+*.sublime-workspace
+
+#   Excel lock files
+*~$*.xls*
+
+#   Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
