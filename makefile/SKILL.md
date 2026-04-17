@@ -14,6 +14,11 @@ Follow these conventions when creating or editing Makefiles in research projects
 - Use `.PHONY` for convenience aliases (`paper`, `all`, `clean`, etc.)
 - Organize targets in **dependency order** — final outputs first, upstream
   inputs below — so a reader can follow the pipeline top-down.
+- **Follow the DAG, not a flat list.** A `.PHONY` target should depend on
+  the most-downstream real file (e.g., the PDF), not enumerate every
+  intermediate output. Make will chase the dependency chain automatically.
+  Only list intermediates as prerequisites of the rules that actually
+  consume them.
 
 ## Prerequisites
 
@@ -88,6 +93,30 @@ clean:
 For R/data projects, a `clean` target is optional — only include it if
 intermediate files are genuinely disposable.
 
+## Copying exhibits into a submodule (e.g., Overleaf)
+
+When the paper lives in a git submodule (Overleaf), **do not batch all `cp`
+commands into the LaTeX build recipe**. Instead, make each submodule copy a
+separate target with its own `cp` recipe. The LaTeX target then lists the
+submodule copies as prerequisites — Make only re-copies when the source
+changes, and the recipe stays clean:
+
+```makefile
+paper: 4_paper/main_paper.pdf
+
+4_paper/main_paper.pdf: \
+		4_paper/main_paper.tex \
+		4_paper/figures/coefficient_plot.pdf \
+		4_paper/figures/balance_table.tex
+	cd 4_paper && latexmk -pdf -interaction=nonstopmode -halt-on-error main_paper.tex
+
+4_paper/figures/coefficient_plot.pdf: 2_build/figures/coefficient_plot.pdf
+	cp 2_build/figures/coefficient_plot.pdf 4_paper/figures/coefficient_plot.pdf
+
+4_paper/figures/balance_table.tex: 2_build/tables/balance_table.tex
+	cp 2_build/tables/balance_table.tex 4_paper/figures/balance_table.tex
+```
+
 ## Cross-directory dependencies
 
 Use relative paths for dependencies in sibling directories:
@@ -146,6 +175,29 @@ uganda: 2_build/potential_assignments_uganda.arrow
 		1_source/neighborhood_frame_uganda.csv
 	Rscript 0_scripts/2.2.Strata.Neighborhoods.Uganda.R
 ```
+
+## Grouped targets (`&:`)
+
+When a single script produces multiple output files, prefer structuring the
+Makefile so each target has its own rule (one output per rule). This avoids
+the multi-target problem entirely and keeps the DAG clean.
+
+When that is not practical (e.g., one R script that writes 5 files in a
+single run), use **grouped targets** (`&:` instead of `:`) so Make knows
+the recipe produces all listed outputs together. Without `&:`, Make treats
+a multi-output rule as N separate rules sharing a recipe and may show
+duplicate invocations in `--dry-run`:
+
+```makefile
+# Good: grouped target — recipe runs once for all outputs
+2_build/table_a.tex \
+2_build/table_b.tex &: \
+		0_scripts/make_tables.R \
+		1_source/data.csv
+	Rscript 0_scripts/make_tables.R
+```
+
+Requires GNU Make 4.3+. Check with `make --version`.
 
 ## Don't
 
