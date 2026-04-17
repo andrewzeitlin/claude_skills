@@ -13,8 +13,32 @@ Follow these rules when creating or editing BibTeX entries.
 hallucinate citation details — wrong years, wrong journals, wrong page numbers,
 and sometimes entirely fabricated papers. Before incorporating any new entry:
 
-1. Search Google Scholar (via `WebSearch`) for the paper by author + title.
+1. Search Google Scholar via the `scholarly` Python package:
+
+   ```bash
+   python3 -c "
+   from scholarly import scholarly
+   results = scholarly.search_pubs('AUTHOR SURNAME TITLE KEYWORDS')
+   pub = next(results)
+   bib = pub['bib']
+   print('Title:', bib.get('title'))
+   print('Authors:', bib.get('author'))
+   print('Year:', bib.get('pub_year'))
+   print('Venue:', bib.get('venue'))
+   print('Volume:', bib.get('volume'))
+   print('Number:', bib.get('number'))
+   print('Pages:', bib.get('pages'))
+   # For DOI, check the pub_url or eprint_url
+   print('URL:', pub.get('pub_url'))
+   print('eprint:', pub.get('eprint_url'))
+   "
+   ```
+
+   If `scholarly` is not installed: `pip install scholarly`
+
 2. Confirm: author names, year, journal/outlet, volume, number, pages, and DOI.
+   If `scholarly` does not return volume/pages/DOI, try fetching the publisher
+   page URL with `WebFetch` to extract those fields.
 3. If the search returns no match, flag the reference to the user — do not
    guess or fill in details from memory.
 
