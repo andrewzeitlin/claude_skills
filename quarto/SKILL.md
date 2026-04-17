@@ -125,6 +125,41 @@ Rules:
 - The `\tblnote` approach gives page-width justified notes with correct LaTeX
   rendering.
 
+## Inputting pre-built .tex tables
+
+When tables are produced by standalone R scripts (not inline R chunks), use
+`\input{}` inside the Quarto div — the same wrapper pattern as for inline
+tables, preserving cross-referencing, `\tblnote{}`, and the short caption:
+
+````
+::: {#tbl-balance}
+
+\input{tables/balance_table.tex}
+
+\tblnote{Sample restricted to respondents interviewed at both baseline and
+endline. Column 1 reports control-group means.}
+
+Balance on baseline characteristics.
+:::
+````
+
+The `\input{}` path is relative to the `.qmd` file's directory. This pattern
+ensures consistency: the same .tex file is used in both the Quarto summary
+document and the LaTeX paper (via `\input{}` in both places).
+
+The same approach works for TikZ diagrams produced by scripts — wrap the
+`\input{}` in a `\begin{figure}...\end{figure}` environment with
+`\caption{}` and `\label{}`:
+
+```latex
+\begin{figure}[htbp]
+\centering
+\input{tables/policy_tree.tex}
+\caption{Learned policy tree (depth 2).}
+\label{fig-policy-tree}
+\end{figure}
+```
+
 ## The `kb()` helper
 
 Always pass `format = "latex"` and `booktabs = TRUE` in `knitr::kable()` calls
