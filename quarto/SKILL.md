@@ -81,6 +81,8 @@ Common setup libraries: `here`, `data.table`, `fst`, `knitr`, `kableExtra`,
 **Keep captions short (one sentence).** Move explanatory details, definitions,
 and methodological notes into `\fignote{}`.
 
+### Chunk-generated figures (R output)
+
 Use Quarto's `fig.cap=` chunk option for the short caption. Place
 `\fignote{...}` on a line after the closing `` ``` ``:
 
@@ -96,8 +98,40 @@ ggplot(dt, aes(x = estimate, y = outcome)) + geom_point()
 95\% confidence intervals. Standard errors clustered at the group level.}
 ````
 
-Note: very tall figures may need `fig.height` reduced to keep the note on the
-same page.
+Note: very tall figures may need `fig.height` reduced to keep the note on
+the same page.
+
+### Hand-written figures (TikZ, `\input{}`, raw LaTeX `figure` blocks)
+
+When the figure is a hand-written `\begin{figure}...\end{figure}` block
+(TikZ diagram, external `.tex` via `\input{}`, or raw LaTeX image), the
+float can drift away from its anchor in the source. Place `\fignote{...}`
+**inside** the figure environment, between `\label{}` and `\end{figure}`,
+so the note travels with the float rather than being left behind.
+
+For strict placement (so the float does not drift at all), load `float`
+in the header:
+
+```yaml
+include-in-header:
+  text: |
+    \usepackage{float}
+```
+
+and use `[H]` instead of `[h]`:
+
+```latex
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+...
+\end{tikzpicture}
+\caption{Short one-sentence caption.}
+\label{fig-mylabel}
+\fignote{Longer explanatory notes. They sit inside the figure
+environment so they stay with the float.}
+\end{figure}
+```
 
 ## Table captions and notes
 
@@ -149,14 +183,17 @@ document and the LaTeX paper (via `\input{}` in both places).
 
 The same approach works for TikZ diagrams produced by scripts — wrap the
 `\input{}` in a `\begin{figure}...\end{figure}` environment with
-`\caption{}` and `\label{}`:
+`\caption{}`, `\label{}`, and `\fignote{}` (see the hand-written figures
+subsection above for placement inside the float):
 
 ```latex
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
-\input{tables/policy_tree.tex}
+\input{figures/policy_tree.tex}
 \caption{Learned policy tree (depth 2).}
 \label{fig-policy-tree}
+\fignote{Interior nodes show splitting variable and threshold;
+leaves show recommended treatment.}
 \end{figure}
 ```
 
