@@ -260,6 +260,10 @@ Prefer open, interoperable formats:
 
 - Don't use `kable(caption = ...)` — use the Quarto div pattern above.
 - Don't use `kable_styling(latex_options = "hold_position")`.
+- Don't mix `tbl-pos=` on the Quarto div with
+  `kable_styling(latex_options = "hold_position")`. Combining the two leaks
+  a `[!h]` placement specifier into the rendered output. Use one placement
+  mechanism, not both; the div-level `tbl-pos=` is the preferred one.
 - Don't use `kableExtra::footnote()` with `threeparttable = TRUE`.
 - Don't put long explanatory text in the `fig-cap` or `tbl-cap` — use
   `\fignote{}` or `\tblnote{}` for detail.
