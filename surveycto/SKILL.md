@@ -54,6 +54,21 @@ Multi-choice field (checkboxes by default). Exports produce **two things**:
 When working with a `select_multiple` variable, use the dummy columns for analysis; the
 space-separated column is mainly useful for filtering/checking.
 
+### Field-list table headers with `label` and `list-nolabel`
+SurveyCTO can render a compact table when several `select_one` or `select_multiple` fields
+with the same response options are placed inside a `field-list` group. A common pattern is:
+
+- the first field has `appearance = label`
+- the following row fields have `appearance = list-nolabel`
+
+In this pattern, the first field is often acting only as a **table header** rather than a
+real survey question. It may still appear as a column in the exported data, but observed
+responses are often entirely blank.
+
+**Data-work rule:** if you see this pattern, verify whether the header field is completely
+missing in the export. If all observed values are blank, treat it as display-only and exclude
+it from cleaning, metadata, and analysis outputs unless the user tells you otherwise.
+
 ### `calculate`
 Automatically computed field — never shown in the UI. The value is derived from an expression
 referencing other fields (e.g., `${field_a} + ${field_b}`). Appears as a regular column in
