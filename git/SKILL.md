@@ -85,6 +85,21 @@ def5678 Add widget tests
 abc1234 Fix widget rendering edge case
 ```
 
+### Before merging — check that the target branch is up to date
+
+Always `git fetch` the target branch's remote before starting a squash merge, and check whether the remote is ahead of the local copy:
+
+```bash
+git fetch <remote> <target-branch>
+git log --oneline <target-branch>..<remote>/<target-branch>
+```
+
+If the remote is ahead, **stop and ask the user** whether to:
+1. Fast-forward the local target branch to the remote first, then squash-merge into the updated branch (usually the right choice — it lands the squash on top of latest), or
+2. Squash-merge into the current local state and reconcile later.
+
+Do not silently pull, and do not start the squash merge first and then back out of it after discovering the divergence — backing out a partially-applied squash is messy and easy to get wrong.
+
 ### Performing the merge
 
 **With `gh` (preferred when merging via a PR):**
@@ -110,7 +125,49 @@ git commit   # Compose the squash message using the format above
 
 ## Git LFS
 
-In any non-Overleaf repo, install LFS once from the repo root:
+### Machine-level prerequisite (install once per machine)
+
+Before LFS will work for any repo, the `git-lfs` binary has to be on the
+system AND its filters must be wired into git's global config. **Without
+this, `git clone` of an LFS-using repo silently produces tiny pointer
+files (~130 bytes each) in place of the real binary content** — no
+error at clone time, but every program that tries to read those files
+fails with cryptic errors like "could be corrupt or not supported" or
+"invalid magic bytes."
+
+Run on every new machine that will clone LFS-tracked repos:
+
+```bash
+sudo apt install -y git-lfs
+sudo git lfs install --system   # writes /etc/gitconfig; system-wide
+```
+
+`--system` enables LFS filters for every user on the machine (so they
+work for `shiny`, daemon users, cron jobs, etc.). On a single-user
+machine, `git lfs install` (no flag, current user only) is also fine.
+
+For provisioning scripts, install both in the base-packages step so
+later clones Just Work. Existing clones that pre-date the LFS install
+still have pointer files in their working tree — hydrate them
+retroactively with `git lfs pull` inside each affected repo. Pattern:
+
+```bash
+if ! command -v git-lfs >/dev/null 2>&1; then
+  sudo apt-get install -y -qq git-lfs
+fi
+sudo git lfs install --system >/dev/null
+# ... clone or pull ...
+git lfs pull    # hydrate any pointer files left over from a pre-LFS clone
+```
+
+GitHub's LFS auth piggybacks on the same SSH credential used for `git
+clone`/`git pull`, so per-repo deploy keys handle LFS downloads
+transparently. No separate token needed.
+
+### Per-repo setup (when creating a new LFS-using repo)
+
+In any non-Overleaf repo, after the machine-level prerequisite is in
+place, initialise LFS filters in the local clone:
 
 ```bash
 git lfs install
