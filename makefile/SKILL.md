@@ -12,13 +12,39 @@ Follow these conventions when creating or editing Makefiles in research projects
 - Start with a comment: `#  Makefile for <description>`
 - Primary target is the output file (e.g., `Document.pdf`, `analysis.arrow`)
 - Use `.PHONY` for convenience aliases (`paper`, `all`, `clean`, etc.)
-- Organize targets in **dependency order** — final outputs first, upstream
-  inputs below — so a reader can follow the pipeline top-down.
 - **Follow the DAG, not a flat list.** A `.PHONY` target should depend on
   the most-downstream real file (e.g., the PDF), not enumerate every
   intermediate output. Make will chase the dependency chain automatically.
   Only list intermediates as prerequisites of the rules that actually
   consume them.
+
+### Rule ordering (defined by file position — avoid the words "top-down" / "bottom-up")
+
+The terms "top-down" and "bottom-up" are ambiguous for Makefiles because they
+collide on two different axes — *reading direction* (down the file) versus
+*DAG-arrow direction* (ingredients → outputs). Do not use them. Define the
+layout strictly by **line position** instead:
+
+- **Final outputs go near the top of the file** (lowest line numbers, just
+  under the `.PHONY` header). **Raw ingredients / upstream inputs go near the
+  bottom** (highest line numbers).
+- Equivalently: **each rule depends on rules written *below* it.** The DAG's
+  dependency arrows point *upward* as line numbers decrease. The most
+  downstream artifact (the final PDF / `.arrow`) is the first real rule;
+  primitives are last.
+- Reading the file from line 1 downward therefore presents the goal first,
+  then progressively more basic inputs. This matches the GNU Make manual's own
+  examples (the final executable rule first, object-file rules below) and makes
+  the default goal fall naturally at the top.
+
+Note: this is functionally irrelevant to Make — textual rule order never
+affects the build (the only exception: the first non-`.PHONY` target is the
+default goal). It is purely a readability convention. The authoring friction
+(you often compose against data flow, knowing ingredients before the final
+rule) is a one-time write cost and is accepted in favor of read clarity.
+
+This is the convention the user refers to as "bottom-up" (meaning the DAG
+flows *up* the file). Keep using exactly this layout.
 
 ## Prerequisites
 
