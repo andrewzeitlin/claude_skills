@@ -36,6 +36,9 @@
 *.code-workspace
 .radian_profile
 
+#   Claude Code local settings
+.claude/settings.local.json
+
 #   Sublime
 *.sublime-project
 *.sublime-workspace
