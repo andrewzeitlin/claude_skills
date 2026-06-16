@@ -44,6 +44,38 @@ and sometimes entirely fabricated papers. Before incorporating any new entry:
 
 This applies to every new entry, even for well-known papers.
 
+### Approved sources for verification
+
+Two kinds of anchor are acceptable as ground truth:
+
+1. **An approved `.bib` file** maintained by the user (lab-wide bibliographies,
+   prior project bibs). If the entry already exists there, reuse the approved
+   fields verbatim rather than re-deriving them.
+2. **A credible citation source on the web**: the journal or publisher page,
+   a DOI resolver, the issuing institution's working-paper repository, or
+   Google Scholar via `scholarly`. **The source document itself** (a PDF
+   stored in the project, an arXiv preprint, the journal landing page) is the
+   strongest anchor — if the paper sits one folder away in the repo, open it
+   before writing the entry.
+
+Memory, plausibility, association, and "well-known paper" do **not** count
+as verification.
+
+### Never guess first names from initials
+
+If a source provides only initials — e.g. `A. Mackintosh`, `Mackintosh, A.`,
+or just `A.` in a co-author list — preserve the initial (with a period) in
+the BibTeX `author` field. **Never expand initials into guessed full first
+names from memory.** Filling in "Anna" because the surname looks like it
+should go with one of the Annas you've seen is the same class of error as
+fabricating a year or a journal: it produces wrong, attributable text in a
+publishable document, and the mistake is easy to make and hard to catch.
+
+To convert initials to full first names, verify them via one of the approved
+sources above — the source document is usually fastest if it lives in the
+project. If no approved source confirms the full first name, **keep the
+initial**.
+
 ## Entry types
 
 | Publication type | BibTeX type |
