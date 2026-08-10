@@ -56,6 +56,48 @@ git commit -m "Update submodule pointer"
 
 ---
 
+## Staging — name paths explicitly when anything else may be writing
+
+Prefer `git add <path> ...` over `git add -A` / `git add .` whenever another
+process could be touching the working tree at the same time — a background agent,
+a parallel session, a file watcher, a long-running build.
+
+`git add -A` stages whatever happens to be dirty *at that instant*, not what you
+changed. If a concurrent writer has edited other files, they land in your commit,
+under a message that describes something else. The result is a commit whose
+message is simply false about its contents, which is far more costly than a messy
+diff: it misleads every later reader, and `git log -- <path>` will attribute the
+change to the wrong work.
+
+```bash
+# Risky when anything else may be writing
+git add -A && git commit -m "Fix the parser"
+
+# Safe: stage exactly what this commit is about
+git add src/parser.R tests/test_parser.R
+git commit -m "Fix the parser"
+```
+
+Before committing, confirm the staged set is what you intend:
+
+```bash
+git status --short          # staged vs unstaged, at a glance
+git diff --cached --stat    # exactly what is about to be committed
+```
+
+**If it has already happened** and the commits are unpushed, split them rather
+than leaving the record wrong:
+
+```bash
+git reset --soft <commit>~1   # keep the work, undo the commits
+git reset                      # unstage everything
+git add <paths for commit 1>   # then re-commit in accurate pieces
+```
+
+Check with `git log --oneline <remote>/<branch>..HEAD` that the commits really are
+unpushed first; if they are already published, add a follow-up commit that records
+the correction instead of rewriting shared history.
+
 ## Merging feature branches into `main` — squash by default
 
 Prefer a squash merge when merging a feature branch into `main`. This keeps `main`'s history linear and produces one commit per merged feature.
