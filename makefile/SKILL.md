@@ -46,6 +46,49 @@ rule) is a one-time write cost and is accepted in favor of read clarity.
 This is the convention the user refers to as "bottom-up" (meaning the DAG
 flows *up* the file). Keep using exactly this layout.
 
+#### Which output is the apex
+
+When a project builds **both** a paper (often in an Overleaf submodule) and a
+local analysis document, the paper is the apex: it `cp`s exhibits that the local
+analysis target builds, so it sits **downstream** of them. Its rules therefore
+go **above** the local analysis rules:
+
+```makefile
+.PHONY: all analysis paper clean
+
+all: analysis paper
+analysis: Note.pdf
+paper: 4_paper/main_paper.pdf
+
+#  the paper (apex) -- depends on the submodule copies below
+4_paper/main_paper.pdf: \
+		4_paper/main_paper.tex \
+		4_paper/figures/coefficient_plot.pdf
+	cd 4_paper && latexmk -pdf -interaction=nonstopmode main_paper.tex
+
+#  the submodule copies -- depend on the local exhibits below
+4_paper/figures/coefficient_plot.pdf: 2_build/figures/coefficient_plot.pdf
+	cp 2_build/figures/coefficient_plot.pdf 4_paper/figures/coefficient_plot.pdf
+
+#  the local analysis document -- depends on the exhibit rules below
+Note.pdf: \
+		Note.qmd \
+		2_build/figures/coefficient_plot.pdf
+	quarto render Note.qmd --to pdf
+
+#  the exhibit rules, then the primitives that feed them, below this point
+```
+
+Declare the `.PHONY` aliases **first** so the intended default goal is the first
+target Make sees. Otherwise the default is whatever real target happens to
+appear earliest, which is easy to get wrong silently — a bare `make` can end up
+building only one of two deliverables.
+
+**Auditing the invariant.** To check that a Makefile satisfies "every rule
+depends only on rules written below it", parse the rules once at the shell and
+compare line numbers. Run that as a one-off; do not commit it as a target (see
+the prohibition below).
+
 ## Prerequisites
 
 List every prerequisite directly on the target rule using `\` continuation.
@@ -81,6 +124,43 @@ Make syntax.
 | Beamer via Quarto | `quarto render File.qmd --to beamer` |
 | PDF via LaTeX | `latexmk -pdf -interaction=nonstopmode -halt-on-error File.tex` |
 | R script | `Rscript path/to/script.R` |
+
+## Never write self-checking or self-inspecting recipes
+
+**Prohibited: a target whose recipe inspects the project's own source files to
+verify that the Makefile is correct.** This includes any recipe that greps a
+`.tex`/`.qmd`/`.md` source for referenced figures or tables, greps the Makefile
+itself for its own rules, and compares the two sets to report drift.
+
+Such a target is always a violation of the conventions above, on every count:
+
+- It produces **no output file**, so Make cannot tell whether it is up to date
+  and re-runs it every time.
+- It requires **shell variables** (`$$tex`, `$$miss`), temporary files, and
+  multi-command `\`-continued pipelines — the opposite of "a reader should see
+  the exact command without decoding".
+- It uses text-matching to re-derive a dependency graph that **the Makefile
+  already states declaratively**. The prerequisite list is the ledger; a grep
+  over source files is a second, weaker copy of it that can disagree.
+- It converts a one-off audit into a permanent tax on every build.
+
+If you suspect the Makefile has drifted from what the document actually uses,
+**run the comparison once, by hand, at the shell, and fix what it finds.** Do
+not commit the comparison. A consistency question that recurs often enough to
+feel like it needs automation is a signal that the *structure* is wrong — a
+missing `.PHONY` target, an exhibit no rule builds, an orphaned output — and
+the fix belongs in the rules, not in a watchdog.
+
+The same applies to recipes that lint, count, or assert things about the
+repository (file counts, naming conventions, "did someone forget to..."). A
+Makefile builds artifacts from inputs. It is not a test harness.
+
+**Verification that belongs in a script is different and is fine.** A build
+script may check its own numerical results and exit non-zero on failure, and
+that script's output file may be a prerequisite of the document — so a broken
+invariant stops the build. The distinction is that the check lives in the
+script that computes the thing, produces a real output, and tests *results*,
+not the Makefile's own bookkeeping.
 
 ## Indentation
 
@@ -232,6 +312,10 @@ Requires GNU Make 4.3+. Check with `make --version`.
 - Don't use `$(shell ...)` or computed paths.
 - Don't add unnecessary complexity — a Makefile is documentation of the build
   graph, not a program.
+- Don't write self-checking targets that grep the project's own sources (or the
+  Makefile itself) to verify the build graph. Run that audit once at the shell
+  and fix what it finds. See "Never write self-checking or self-inspecting
+  recipes" above.
 
 ## Related skills
 
