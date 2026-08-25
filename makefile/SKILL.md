@@ -11,7 +11,7 @@ Follow these conventions when creating or editing Makefiles in research projects
 
 - Start with a comment: `#  Makefile for <description>`
 - Primary target is the output file (e.g., `Document.pdf`, `analysis.arrow`)
-- Use `.PHONY` for convenience aliases (`paper`, `all`, `clean`, etc.)
+- Use `.PHONY` for convenience aliases (`paper`, `all`, `analysis`, etc.)
 - **Follow the DAG, not a flat list.** A `.PHONY` target should depend on
   the most-downstream real file (e.g., the PDF), not enumerate every
   intermediate output. Make will chase the dependency chain automatically.
@@ -54,7 +54,7 @@ analysis target builds, so it sits **downstream** of them. Its rules therefore
 go **above** the local analysis rules:
 
 ```makefile
-.PHONY: all analysis paper clean
+.PHONY: all analysis paper
 
 all: analysis paper
 analysis: Note.pdf
@@ -182,22 +182,25 @@ Use `#  ` (hash + two spaces) for section comments that group related targets:
 Provide short convenience aliases:
 
 ```makefile
-.PHONY: all paper clean
+.PHONY: all paper
 all: kenya uganda
 paper: main_paper.pdf
 ```
 
-## Clean target
+## Do not write a `clean` target
 
-For LaTeX projects, use `latexmk -C` to clean:
+**Do not add one, in any project, unless the user explicitly asks for it.** They
+go unused, and they carry real risk: a build directory usually holds artifacts
+`make` cannot regenerate — results committed from a cluster run, a manual
+export, anything expensive — and a `clean` recipe (especially a globbing one) is
+a standing invitation to destroy them. The convenience is small and the downside
+is unrecoverable work.
 
-```makefile
-clean:
-	latexmk -C main_paper.tex
-```
+If a build directory genuinely needs resetting, delete the specific files at the
+shell, where the command is visible before it runs.
 
-For R/data projects, a `clean` target is optional — only include it if
-intermediate files are genuinely disposable.
+Where a Makefile previously had one, a short comment saying **why there is no
+`clean` target** is worth keeping, so nobody helpfully re-adds it.
 
 ## Copying exhibits into a submodule (e.g., Overleaf)
 
@@ -239,7 +242,7 @@ Use relative paths for dependencies in sibling directories:
 ```makefile
 #  Makefile for main paper (LaTeX build of main_paper.tex)
 
-.PHONY: paper clean
+.PHONY: paper
 
 paper: main_paper.pdf
 
@@ -253,9 +256,6 @@ main_paper.pdf: \
 		figures/results_visuals/main_coefficients.jpg \
 		figures/design_visuals/sample_division.jpg
 	latexmk -pdf -interaction=nonstopmode -halt-on-error main_paper.tex
-
-clean:
-	latexmk -C main_paper.tex
 ```
 
 ## Full example (R data pipeline)
@@ -312,6 +312,8 @@ Requires GNU Make 4.3+. Check with `make --version`.
 - Don't use `$(shell ...)` or computed paths.
 - Don't add unnecessary complexity — a Makefile is documentation of the build
   graph, not a program.
+- Don't add a `clean` target unless explicitly asked. See "Do not write a
+  `clean` target" above.
 - Don't write self-checking targets that grep the project's own sources (or the
   Makefile itself) to verify the build graph. Run that audit once at the shell
   and fix what it finds. See "Never write self-checking or self-inspecting
