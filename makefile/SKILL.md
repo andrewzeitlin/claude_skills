@@ -125,6 +125,25 @@ Make syntax.
 | PDF via LaTeX | `latexmk -pdf -interaction=nonstopmode -halt-on-error File.tex` |
 | R script | `Rscript path/to/script.R` |
 
+## Pin BLAS threads for R recipes — from the Makefile, not the script
+
+R links a multithreaded BLAS. When an R script also parallelises with
+`mclapply`, every forked worker spawns a full set of BLAS threads and the machine
+is oversubscribed — measured at roughly **130× slower**, and with results that
+vary in the last bit run to run. Export the three variables **at the top of the
+Makefile** so every recipe inherits them:
+
+```makefile
+export OMP_NUM_THREADS = 1
+export MKL_NUM_THREADS = 1
+export OPENBLAS_NUM_THREADS = 1
+```
+
+Do not rely on a `Sys.setenv()` call inside the R script: the BLAS library reads
+these variables when it loads, before R evaluates the script's first line, so
+that call is a no-op that merely looks protective. The same export belongs at the
+top of any SLURM or shell driver that calls `Rscript` outside of Make.
+
 ## Never write self-checking or self-inspecting recipes
 
 **Prohibited: a target whose recipe inspects the project's own source files to
